@@ -10,7 +10,7 @@ try:
     api_key=os.getenv('OPENAI_API_KEY')
     client = OpenAI(api_key=api_key)
 except Exception as e:
-    st.error('키:', api_key)
+    st.error(f'키: {api_key}')
     st.error(e)
 # client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 # client = OpenAI()
