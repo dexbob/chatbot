@@ -12,3 +12,6 @@ wheels/
 # 환경설정 파일
 .env
 
+# 로그 파일
+logs/system_*.log
+

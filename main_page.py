@@ -1,12 +1,13 @@
-from datetime import datetime
-from openai import OpenAI
-from dotenv import load_dotenv
+import os
 import streamlit as st
+from datetime import datetime
+from dotenv import load_dotenv
+from openai import OpenAI
 
 # 기본 설정
 load_dotenv()
-# client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-client = OpenAI()
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# client = OpenAI()
 
 st.set_page_config(
     page_icon="✨",
