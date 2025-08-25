@@ -9,7 +9,7 @@ def main():
     # 시스템 로그 파일
     system_log = datetime.now().strftime("logs/system_%y%m%d.log")
     # Streamlit 실행
-    command = rf'streamlit run 💫main_page.py >> {system_log} 2>&1 '
+    command = rf'streamlit run main_page.py >> {system_log} 2>&1 '
     os.system(command)
     # import test
     # test.run()
