@@ -5,8 +5,14 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 # 기본 설정
-load_dotenv()
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+try:
+    load_dotenv()
+    api_key=os.getenv('OPENAI_API_KEY')
+    client = OpenAI(api_key=api_key)
+except Exception as e:
+    st.error('키:', api_key)
+    st.error(e)
+# client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 # client = OpenAI()
 
 st.set_page_config(
