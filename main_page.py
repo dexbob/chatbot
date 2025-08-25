@@ -5,20 +5,14 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 # 기본 설정
-try:
-    load_dotenv()
-    api_key=os.getenv('OPENAI_API_KEY')
-    client = OpenAI(api_key=api_key)
-except Exception as e:
-    st.error(f'키: {api_key}')
-    st.error(e)
+load_dotenv()
 # client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-# client = OpenAI()
+client = OpenAI()
 
 st.set_page_config(
     page_icon="✨",
-    page_title="스타일 문장 교정 서비스",
-    layout="wide"
+    page_title="문장 스타일 교정 서비스",
+    # layout="wide"
 )
 
 def save_chat_log():
@@ -29,6 +23,7 @@ def save_chat_log():
                 f.write(f'[{message['role']}]')
                 f.write(message['content'])
                 f.write('\n')
+
 
 def run() -> None:
     st.title('문장 교정 서비스')
@@ -52,7 +47,7 @@ def run() -> None:
             st.markdown(msg['content'])
         
         # OpenAI API 호출을 위한 응답 표시용 플레이스홀더
-        response_placeholder = st.empty()
+        # response_placeholder = st.empty()
         with st.spinner('thinking...'):
             res = client.chat.completions.create(
                 model='gpt-4o-mini-2024-07-18',     # 적절한 모델
@@ -62,12 +57,8 @@ def run() -> None:
                 stream=True
             )
             
-        result = ''
-        for chunk in res:
-            delta = chunk.choices[0].delta
-            if delta.content is not None:
-                result += delta.content
-                response_placeholder.markdown(result)
+        with st.chat_message('assistant'):
+            result = st.write_stream(res)
         st.session_state.messages.append({"role": "assistant", "content": result})
 
 
