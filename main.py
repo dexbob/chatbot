@@ -11,8 +11,8 @@ def main():
     # Streamlit 실행
     command = rf'streamlit run main_page.py >> {system_log} 2>&1 '
     os.system(command)
-    # import test
-    # test.run()
+    # from logics import basic_model
+    # basic_model.main()
     
 
 

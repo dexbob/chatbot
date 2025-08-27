@@ -1,66 +1,67 @@
-import os
+import uuid
 import streamlit as st
 from datetime import datetime
-from dotenv import load_dotenv
-from openai import OpenAI
-
-# 기본 설정
-load_dotenv()
-# client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-client = OpenAI()
+from logics.basic_model import compiled_graph, init_state
+from langchain_core.runnables import RunnableConfig
 
 st.set_page_config(
     page_icon="✨",
-    page_title="문장 스타일 교정 서비스",
+    page_title="문장 추천 서비스",
     # layout="wide"
 )
-
-def save_chat_log():
-    chat_log = datetime.now().strftime("logs/system_%y%m%d.log")
-    with open(chat_log, 'a') as f:
-        for message in st.session_state.messages:
-            if message['role'] != 'system':
-                f.write(f'[{message['role']}]')
-                f.write(message['content'])
-                f.write('\n')
+def save_chat_log(message):
+    chat_log = datetime.now().strftime("logs/debug_%y%m%d.log")
+    with open(chat_log, 'a', encoding='utf8') as f:
+        f.write(message)
+                
+def stream_data(app, inputs, config):
+    for chunk_msg, metadata in app.stream(inputs, config, stream_mode="messages"):
+        yield chunk_msg.content 
 
 
 def run() -> None:
-    st.title('문장 교정 서비스')
+    st.title('문장 추천 서비스')
     
-    if 'messages' not in st.session_state:
-        st.session_state.messages = [
-            {"role": "system", "content": "당신은 도움을 주는 훌륭한 조수이다."},
-        ]
+    if 'state' not in st.session_state:
+        st.session_state.state = {'messages': []}
+
+    state = st.session_state.state
     
     # 이전 대화 정보 출력
-    for msg in st.session_state.messages:
-        if msg['role'] != 'system':
-            with st.chat_message(msg['role']):
-                st.markdown(msg['content'])
-        
-    user_input = st.chat_input('질문을 입력하세요.')
-    if user_input:
-        msg = {'role': 'user', 'content': user_input}
-        st.session_state.messages.append(msg)
-        with st.chat_message(msg['role']):
-            st.markdown(msg['content'])
-        
-        # OpenAI API 호출을 위한 응답 표시용 플레이스홀더
-        # response_placeholder = st.empty()
-        with st.spinner('thinking...'):
-            res = client.chat.completions.create(
-                model='gpt-4o-mini-2024-07-18',     # 적절한 모델
-                # model='gpt-3.5-turbo-0125',     # 단문 위주 모델
-                # model='gpt-5-nano',     # 저렴한 모델(속도느림)
-                messages=st.session_state.messages,
-                stream=True
-            )
+    for msg in state['messages']:
+        if msg.role == 'system':
+            continue
+        elif msg.role == 'user':
+            content = msg.additional_kwargs.get('sentence')
+        elif msg.role:
+            content = msg.content
+        with st.chat_message(msg.role):
+            st.markdown(content)
             
-        with st.chat_message('assistant'):
-            result = st.write_stream(res)
-        st.session_state.messages.append({"role": "assistant", "content": result})
+    
+    style_input = st.chat_input('스타일을 입력해 주세요. (공백은 기본 스타일로 출력합니다)')    
+    user_input = st.chat_input('대상 문장을 입력하세요.')
 
+    if style_input and style_input.strip() != '':
+        state.update({'styles':style_input, 'number':5})
+        
+    if user_input and user_input.strip() != '':
+        with st.chat_message('user'):
+            st.markdown(user_input)
+        
+        # config = RunnableConfig(recursion_limit=10, configurable={"thread_id": str(uuid.uuid4())})
+        app = compiled_graph()
+        
+        state.update({'sentence': user_input})
+
+        with st.spinner('thinking...'):
+            result = app.invoke(state)
+            with st.chat_message('assistant'):
+                st.write(result['generation'])
+                # stream = stream_data(app, {'sentence': user_input}, config)
+                # result = st.write_stream(stream)
+                
+        st.session_state.state = result
 
 if __name__ == "__main__":
     run()
