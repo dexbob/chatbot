@@ -49,8 +49,7 @@ def run() -> None:
             content = msg.content
         with st.chat_message(msg.role):
             st.write(content)
-    
-    # 사이드바에 서브메뉴 설정
+            
     with st.sidebar:
         st.subheader("[서브메뉴]")
         style_input = st.text_input('스타일 입력창', key='style_input')

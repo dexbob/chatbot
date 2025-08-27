@@ -1,3 +1,5 @@
+import io
+import openai
 from dotenv import load_dotenv
 from typing import TypedDict, Annotated, Literal
 from pydantic import BaseModel, Field
@@ -9,11 +11,15 @@ from langchain_core.messages import ChatMessage #, BaseMessage, SystemMessage, H
 # from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
+
+client = openai.OpenAI()
 llm = ChatOpenAI(
     model_name='gpt-4o-mini-2024-07-18', 
     temperature=0.5, 
     streaming=True,
 )
+
+
 basic_styles = '스타일은 10가지로 문어체, 구어체, 감성체, 마케팅체, 뉴스체, 논문체, SNS체, 시적체, 어린이체, 사극체 입니다.'
 
 system_prompt = """당신은 한국어 전문가 입니다. 
@@ -64,6 +70,17 @@ generate_prompt = """
 
 """
 
+def speech_to_text(voice):
+    with io.BytesIO(voice.getvalue()) as file:
+        file.name = 'voice.wav'
+        transcription = client.audio.transcriptions.create(		# 음성 인식
+            model='whisper-1',		# 음성 인식 모델
+            file=file,
+            language='ko'
+        )
+    return transcription.text		# 음성 인식 결과 텍스트
+
+
 # 상태 모델(State) 정의
 class QAState(TypedDict):
     styles: Annotated[str, 'Style question']
@@ -77,19 +94,20 @@ class Condition(BaseModel):
     check: str = Field(description="Indicate 'yes' or 'no' whether it is OK")
 
     
-def init_state(state: QAState) -> QAState:
-    state['messages'] = [ChatMessage(role='system', content=system_prompt)]
-    state['styles'] = basic_styles
-    state['number'] = 1
-    return state
+# def init_state(state: QAState) -> QAState:
+#     state['messages'] = [ChatMessage(role='system', content=system_prompt)]
+#     state['styles'] = basic_styles
+#     state['number'] = 1
+#     return state
 
 # 노드(Node) 정의
 def init(state: QAState) -> QAState:
-    if state['messages']:
-        return state
-    else:
-        print('초기화')
-        return init_state(state)
+    if not state['messages']:
+        state['messages'] = [ChatMessage(role='system', content=system_prompt)]
+    if not state['styles']:
+        state['styles'] = basic_styles
+        state['number'] = 1
+    return state
 
 def set_generation(state: QAState) -> QAState:
     add_kwargs = {'sentence': state['sentence']}        # 원본 입력 문장
@@ -115,7 +133,6 @@ def generate(state: QAState) -> QAState:
     response = llm.invoke(messages)
     messages.append(ChatMessage(role='assistant', content=response.content))
     return QAState(messages=messages, generation=response.content)
-
 
 def check_Sentence(state: QAState):
     structured_llm = llm.with_structured_output(Condition)
