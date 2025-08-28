@@ -1,29 +1,20 @@
-import uuid
+# import uuid
 import streamlit as st
-from datetime import datetime
 from logics.basic_model import compiled_graph
-from langchain_core.runnables import RunnableConfig
+# from langchain_core.runnables import RunnableConfig
 
 st.set_page_config(
     page_icon="✨",
     page_title="문장 추천 서비스",
     # layout="wide"
 )
-def save_chat_log(message):
-    chat_log = datetime.now().strftime("logs/debug_%y%m%d.log")
-    with open(chat_log, 'a', encoding='utf8') as f:
-        f.write(message)
-                
-def stream_data(app, inputs, config):
-    for chunk_msg, metadata in app.stream(inputs, config, stream_mode="messages"):
-        yield chunk_msg.content 
 
 
 def run() -> None:
     st.title('문장 추천 서비스')
     
     if 'state' not in st.session_state:
-        st.session_state.state = {'messages': []}
+        st.session_state.state = {'messages': [], 'styles':''}
 
     state = st.session_state.state
     
@@ -42,8 +33,8 @@ def run() -> None:
     style_input = st.chat_input('스타일을 입력해 주세요. (공백은 기본 스타일로 출력합니다)')    
     user_input = st.chat_input('대상 문장을 입력하세요.')
 
-    if style_input and style_input.strip() != '':
-        state.update({'styles':style_input, 'number':5})
+    if style_input:
+        state.update({'styles':style_input.strip(), 'number':5})
         
     if user_input and user_input.strip() != '':
         with st.chat_message('user'):

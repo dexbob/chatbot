@@ -11,7 +11,7 @@ client = OpenAI()
 
 st.set_page_config(
     page_icon="✨",
-    page_title="문장 추천 서비스",
+    page_title="챗봇 서비스",
     # layout="wide"
 )
 
@@ -45,8 +45,6 @@ def run() -> None:
         with st.chat_message(msg['role']):
             st.markdown(msg['content'])
         
-        # OpenAI API 호출을 위한 응답 표시용 플레이스홀더
-        # response_placeholder = st.empty()
         with st.spinner('thinking...'):
             res = client.chat.completions.create(
                 model='gpt-4o-mini-2024-07-18',     # 적절한 모델
