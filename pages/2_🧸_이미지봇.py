@@ -18,22 +18,22 @@ st.set_page_config(
 def save_chat_log():
     chat_log = datetime.now().strftime("logs/debug_%y%m%d.log")
     with open(chat_log, 'a', encoding='utf8') as f:
-        for message in st.session_state.messages[-2:]:
-            if message['role'] != 'system':
-                f.write(f'[{message['role']}]')
-                f.write(message['content'])
+        for img in st.session_state.images[-2:]:
+            if img['role'] != 'system':
+                f.write(f'[{img['role']}]')
+                f.write(img['content'])
                 f.write('\n')
 
 def run() -> None:
     st.title('이미지봇 서비스')
     
-    if 'messages' not in st.session_state:
-        st.session_state.messages = [
+    if 'images' not in st.session_state:
+        st.session_state.images = [
             {"role": "system", "content": "당신은 도움을 주는 훌륭한 조수이다."},
         ]
     
     # 이전 대화 정보 출력
-    for msg in st.session_state.messages:
+    for msg in st.session_state.images:
         if msg['role'] == 'user':
             with st.chat_message(msg['role']):
                 st.markdown(msg['content'])
@@ -44,7 +44,7 @@ def run() -> None:
     user_input = st.chat_input('질문을 입력하세요.')
     if user_input:
         msg = {'role': 'user', 'content': user_input}
-        st.session_state.messages.append(msg)
+        st.session_state.images.append(msg)
         with st.chat_message(msg['role']):
             st.markdown(msg['content'])
         
@@ -60,7 +60,7 @@ def run() -> None:
         with st.chat_message('assistant'):
             url = res.data[0].url
             st.image(url)
-        st.session_state.messages.append({"role": "assistant", "content": url})
+        st.session_state.images.append({"role": "assistant", "content": url})
         save_chat_log()
 
 if __name__ == "__main__":
