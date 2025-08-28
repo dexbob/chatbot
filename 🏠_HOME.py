@@ -1,8 +1,8 @@
 # import uuid
 import streamlit as st
-from datetime import datetime
+# from datetime import datetime
 from logics.basic_model import compiled_graph, speech_to_text
-from langchain_core.runnables import RunnableConfig
+# from langchain_core.runnables import RunnableConfig
 
 st.set_page_config(
     page_icon="✨",
@@ -10,14 +10,14 @@ st.set_page_config(
     # layout="wide"
 )
 
-def save_chat_log(message):
-    chat_log = datetime.now().strftime("logs/debug_%y%m%d.log")
-    with open(chat_log, 'a', encoding='utf8') as f:
-        f.write(message)
+# def save_chat_log(message):
+#     chat_log = datetime.now().strftime("logs/debug_%y%m%d.log")
+#     with open(chat_log, 'a', encoding='utf8') as f:
+#         f.write(message)
                 
-def stream_data(app, inputs, config):
-    for chunk_msg, metadata in app.stream(inputs, config, stream_mode="messages"):
-        yield chunk_msg.content 
+# def stream_data(app, inputs, config):
+#     for chunk_msg, metadata in app.stream(inputs, config, stream_mode="messages"):
+#         yield chunk_msg.content 
 
 def clear_style_input():
     st.session_state.style_input = ''
