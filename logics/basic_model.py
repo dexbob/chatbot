@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from typing import TypedDict, Annotated, Literal
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, END     # 그래프 및 종료 지점
+from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import ChatMessage #, BaseMessage, SystemMessage, HumanMessage, AIMessage
@@ -93,13 +93,6 @@ class QAState(TypedDict):
 class Condition(BaseModel):
     check: str = Field(description="Indicate 'yes' or 'no' whether it is OK")
 
-    
-# def init_state(state: QAState) -> QAState:
-#     state['messages'] = [ChatMessage(role='system', content=system_prompt)]
-#     state['styles'] = basic_styles
-#     state['number'] = 1
-#     return state
-
 # 노드(Node) 정의
 def init(state: QAState) -> QAState:
     if not state['messages']:
@@ -161,7 +154,6 @@ def compiled_graph():
     graph.add_node('generate', generate)
     # 흐름(Edge) 연결
     graph.set_entry_point('init')
-    # graph.add_edge('init', 'rectify')
     graph.add_conditional_edges('init', check_Sentence)
     graph.add_edge('rectify', 'generate')
     graph.add_edge('set_generation', END)
@@ -178,7 +170,7 @@ def invoke(state, style=None):
 
 
 if __name__ == "__main__":
-    state = {'sentence': 'asdf한s글d'}
+    state = {'sentence': 'asdf한s글d', 'styles':''}
     result = invoke(state)
     print(result['generation'])
     
