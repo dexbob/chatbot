@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from typing import TypedDict, Annotated
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
+from langsmith.wrappers import wrap_openai
+from langsmith import traceable
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langchain_core.prompts import ChatPromptTemplate
@@ -15,7 +17,8 @@ from langchain_core.messages import ChatMessage #, BaseMessage, SystemMessage, H
 load_dotenv()
 
 # openai 클라이언트 정의 (STT에 사용)
-client = openai.OpenAI()
+# client = openai.OpenAI()
+client = wrap_openai(openai.Client())       # langsmith 자동 추적 LLM
 
 # langchain의 LLM 객체 정의
 llm = ChatOpenAI(
@@ -37,6 +40,7 @@ generate_prompt = data['generate_prompt']       # 스타일에 맞는 문장 생
 
 
 # STT 함수 (음성인식)
+@traceable      # langsmith 자동추적
 def speech_to_text(voice):
     with io.BytesIO(voice.getvalue()) as file:
         file.name = 'voice.wav'     # 파일명을 설정해줘야 파일로 읽음
