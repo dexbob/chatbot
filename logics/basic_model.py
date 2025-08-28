@@ -1,4 +1,5 @@
 import io
+import yaml
 import openai
 from dotenv import load_dotenv
 from typing import TypedDict, Annotated, Literal
@@ -10,69 +11,34 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import ChatMessage #, BaseMessage, SystemMessage, HumanMessage, AIMessage
 # from langchain_core.output_parsers import StrOutputParser
 
+# 환경설정파일 로드
 load_dotenv()
 
+# openai 클라이언트 정의 (STT에 사용)
 client = openai.OpenAI()
+
+# langchain의 LLM 객체 정의
 llm = ChatOpenAI(
     model_name='gpt-4o-mini-2024-07-18', 
     temperature=0.5, 
     streaming=True,
 )
 
+# 프롬프트 정보 추출
+with open('logics/prompts.yaml', encoding='utf-8') as f:
+    data = yaml.safe_load(f)
+    
+basic_styles = data['basic_styles']
+system_prompt = data['system_prompt']
+check_sentence_prompt = data['check_sentence_prompt']
+retify_prompt = data['retify_prompt']
+generate_prompt = data['generate_prompt']
 
-basic_styles = '스타일은 10가지로 문어체, 구어체, 감성체, 마케팅체, 뉴스체, 논문체, SNS체, 시적체, 어린이체, 사극체 입니다.'
 
-system_prompt = """당신은 한국어 전문가 입니다. 
-한글로 입력된 문장을 다음과 같은 스타일에 맞게 자연스러운 문장으로 변환하여 표현해 주세요."""
-
-check_sentence_prompt = """
-다음 문장이 불완전하거나 의미없는 무작위 키 입력(예: 'ㅁㄴㅇㄹㅇㅁㄴㅇㄹ')이라면 'no'를 출력하세요.
-그 문장이 한글 문법, 맞춤법, 띄어쓰기로 교정 가능하면 'yes'를 출력하세요.
-
-문장: {sentence}
-"""
-
-retify_prompt = """
-다음 문장에서 한글 문법, 맞춤법, 띄어쓰기를 교정해 주세요. 의미 또는 표현 변경 없이 오직 문법만 수정해 주세요.
-
-문장: {sentence}
-"""
-generate_prompt = """
-다음 입력값에 따라 문장을 생성하세요. 
-
-[원문] {sentence}
-[스타일] {styles}
-[문장개수] {number}
-
-[출력형식]
-- 원문을 바탕으로 스타일에 맞게 문장을 생성하세요.
-- 각 스타일마다 {number}개의 문장만 생성하세요.
-- 각 문장은 코드블록으로 감싸 클립보드 복사가 가능해야 합니다.
-- 출력 예시는 아래와 같습니다.
-
-예시 입력: 
-[원문] 오늘은 날씨가 참 좋다 
-[스타일] 스타일은 SNS체 입니다 
-[문장개수] 2 
-
-예시 출력:
-**원문:**
-```
-오늘은 날씨가 참 좋다.  
-```
-**SNS체:**
-```
-날씨 미쳤다 ☀️ #맑음 #행복    
-```
-```
-화창한 한늘과 새하얀 뭉게구름이 외출을 부르는구나 💨 #야외      
-```
-
-"""
-
+# STT 함수 (음성인식)
 def speech_to_text(voice):
     with io.BytesIO(voice.getvalue()) as file:
-        file.name = 'voice.wav'
+        file.name = 'voice.wav'     # 파일명을 설정해줘야 파일로 읽음
         transcription = client.audio.transcriptions.create(		# 음성 인식
             model='whisper-1',		# 음성 인식 모델
             file=file,
